@@ -2,6 +2,7 @@
 ## Coding Exam
 
 - composer install.
-- php artisan migrate --seed.
+- copy env.example .env
+- php artisan migrate:fresh --seed.
 - php artisan serve.
 
