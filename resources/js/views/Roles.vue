@@ -5,7 +5,7 @@
            <div class="row">
                <div class="col-md-8 mr-auto ml-auto">
                     <h2 style="font-weight: 900;" class="float-left">Roles Page</h2>
-                    <button class="btn btn-sm btn-primary float-right" @click="openModal"> New User </button>
+                    <button class="btn btn-sm btn-primary float-right" @click="openModal"> New Role </button>
                </div>
            </div>
            <hr>
