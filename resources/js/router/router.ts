@@ -22,9 +22,9 @@ export default new VueRouter({
         {
             path: '/dashboard',
             name: 'Dashboard',
-            beforeEnter: (to, from, next) => {
-                localStorage.getItem("user") ? next() : next("/");
-            },
+            // beforeEnter: (to, from, next) => {
+            //     localStorage.getItem("user") ? next() : next("/");
+            // },
             component: Dashboard
         },
         {

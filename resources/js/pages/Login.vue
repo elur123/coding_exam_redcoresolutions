@@ -17,7 +17,7 @@
                         <p class="text-danger" style="font-size:12px;">{{ errors.password }}</p>
                     </div>
 
-                    <button class="btn btn-lg btn-primary btn-block" @click="sigin">Sign in</button>
+                    <button class="btn btn-lg btn-primary btn-block" @click="signin">Sign in</button>
                 </div>
             </div>
         </div>
@@ -39,12 +39,15 @@
             password: ""
         }
 
-        sigin(){
+        signin(){
             axios.post("../api/login", this.user).then(res => {
+               this.$store.commit("setuserInfo", res.data)
                 this.errors = {
                     email: "",
                     password: ""
                 }
+                window.localStorage.setItem("user", JSON.stringify(res.data.user))
+                this.$router.push("/dashboard")
             }).catch(err => {
                 if (err.response.status === 422) {
                     if (err.response.data.email) {

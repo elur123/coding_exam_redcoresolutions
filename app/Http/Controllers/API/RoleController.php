@@ -24,7 +24,7 @@ class RoleController extends Controller
 
     function create(Request $request){
         $this->validate($request, [
-            'role_name' => 'required',
+            'role_name' => 'required|unique:roles',
             'description' => 'required'
         ]);
 
@@ -45,12 +45,12 @@ class RoleController extends Controller
 
     function update(Request $request, $id){
         $this->validate($request, [
-            'role_name' => 'required',
+            'role_name' => 'required|unique:roles,role_name,'.$id,
             'description' => 'required'
         ]);
 
         $update = DB::table('roles')
-        ->where('id', '!=', $id)
+        ->where('id', $id)
         ->update([
             'role_name' => $request->role_name,
             'description' => $request->description,
@@ -67,7 +67,7 @@ class RoleController extends Controller
 
     function delete($id){
         $delete = DB::table('roles')
-        ->where('id', '!=', $id)
+        ->where('id', $id)
         ->delete();
 
         if ($delete) {

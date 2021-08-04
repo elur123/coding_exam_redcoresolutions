@@ -9,18 +9,18 @@
 
         <div class="navbar-collapse collapse" id="navbarsExampleDefault" style="">
             <ul class="navbar-nav mr-auto">
-                <li class="nav-item active">
-                    <a class="nav-link" href="#">Dashboard <span class="sr-only">(current)</span></a>
+                <li class="nav-item" :class="link === 'dashboard' ? 'active' : '' ">
+                    <router-link to="/dashboard" class="nav-link" href="#">Dashboard</router-link>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Users</a>
+                <li class="nav-item" :class="link === 'users' ? 'active' : '' ">
+                    <router-link to="/users" class="nav-link" href="#">Users</router-link>
                 </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="#">Roles</a>
+                <li class="nav-item" :class="link === 'roles' ? 'active' : '' ">
+                    <router-link to="/roles" class="nav-link" href="#">Roles</router-link>
                 </li>
             </ul>
             <div class="form-inline my-2 my-lg-0">
-                <button class="btn btn-outline-success my-2 my-sm-0">Sign out</button>
+                <button class="btn btn-outline-success my-2 my-sm-0" @click="signout">Sign out</button>
             </div>
         </div>
     </nav>
@@ -29,9 +29,14 @@
 <script lang="ts">
     import Vue from "vue"
     import Component from "vue-class-component"
-    @Component
+    @Component({
+        props: ['link']
+    })
     export default class Nav extends Vue {
-
+        signout(){
+            localStorage.clear()
+            this.$router.push("/")
+        }
     }
 
 </script>

@@ -28,9 +28,9 @@ class UserController extends Controller
     function create(Request $request){
         $this->validate($request, [
             'fullname' => 'required|unique:users',
-            'email' => 'required|unique:users',
+            'email' => 'required|emai|unique:users',
             'password' => 'required|min:8',
-            'password_confirmation' => 'required|confirmed',
+            'password_confirmation' => 'required|same:password',
             'role_id' => 'required'
         ]);
 
@@ -54,12 +54,27 @@ class UserController extends Controller
 
     function update(Request $request, $id){
         $this->validate($request, [
-            'role_name' => 'required',
-            'description' => 'required'
+            'fullname' => 'required|unique:users,fullname,'. $id,
+            'email' => 'required|email|unique:users,email,'. $id,
+            'role_id' => 'required'
         ]);
 
-        $update = DB::table('users')
-        ->where('id', '!=', $id)
+        if ($request->password != null) {
+            $this->validate($request, [
+                'password' => 'required|min:8',
+                'password_confirmation' => 'required|same:password',
+            ]);
+
+            DB::table('users')
+            ->where('id', $id)
+            ->update([
+                'password' => Hash::make($request->password),
+                'password_confirmation' => Hash::make($request->password_confirmation)
+            ]);
+        }
+
+        DB::table('users')
+        ->where('id', $id)
         ->update([
             'fullname' => $request->fullname,
             'email' => $request->email,
@@ -69,17 +84,12 @@ class UserController extends Controller
             'updated_at' => date('Y-m-d H:i:s')
         ]);
 
-        if ($update) {
-            return response()->json(["success" => true, "users" => $this->index()], 200);
-        }
-        else{
-            return response()->json(["success" => false, "users" => $this->index()], 500);
-        }
+        return response()->json(["success" => true, "users" => $this->index()], 200);
     }
 
     function delete($id){
         $delete = DB::table('users')
-        ->where('id', '!=', $id)
+        ->where('id',  $id)
         ->delete();
 
         if ($delete) {

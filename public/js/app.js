@@ -2404,8 +2404,14 @@ var Nav = /** @class */ (function (_super) {
     function Nav() {
         return _super !== null && _super.apply(this, arguments) || this;
     }
+    Nav.prototype.signout = function () {
+        localStorage.clear();
+        this.$router.push("/");
+    };
     Nav = __decorate([
-        vue_class_component__WEBPACK_IMPORTED_MODULE_1__["default"]
+        Object(vue_class_component__WEBPACK_IMPORTED_MODULE_1__["default"])({
+            props: ['link']
+        })
     ], Nav);
     return Nav;
 }(vue__WEBPACK_IMPORTED_MODULE_0__["default"]));
@@ -2463,13 +2469,16 @@ var Login = /** @class */ (function (_super) {
         };
         return _this;
     }
-    Login.prototype.sigin = function () {
+    Login.prototype.signin = function () {
         var _this = this;
         axios__WEBPACK_IMPORTED_MODULE_2___default.a.post("../api/login", this.user).then(function (res) {
+            _this.$store.commit("setuserInfo", res.data);
             _this.errors = {
                 email: "",
                 password: ""
             };
+            window.localStorage.setItem("user", JSON.stringify(res.data.user));
+            _this.$router.push("/dashboard");
         }).catch(function (err) {
             if (err.response.status === 422) {
                 if (err.response.data.email) {
@@ -2516,6 +2525,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm.js");
 /* harmony import */ var vue_class_component__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vue-class-component */ "./node_modules/vue-class-component/dist/vue-class-component.esm.js");
 /* harmony import */ var _layouts_Nav_vue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../layouts/Nav.vue */ "./resources/js/layouts/Nav.vue");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_3__);
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -2538,11 +2549,31 @@ var __decorate = (undefined && undefined.__decorate) || function (decorators, ta
 
 
 
+
 var Dashboard = /** @class */ (function (_super) {
     __extends(Dashboard, _super);
     function Dashboard() {
-        return _super !== null && _super.apply(this, arguments) || this;
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.total_users = 0;
+        _this.total_roles = 0;
+        return _this;
     }
+    Object.defineProperty(Dashboard.prototype, "userinfo", {
+        get: function () {
+            return this.$store.getters.getuserInfo;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Dashboard.prototype.mounted = function () {
+        var _this = this;
+        axios__WEBPACK_IMPORTED_MODULE_3___default.a.get("../api/users").then(function (res) {
+            _this.total_users = res.data.length;
+        });
+        axios__WEBPACK_IMPORTED_MODULE_3___default.a.get("../api/roles").then(function (res) {
+            _this.total_roles = res.data.length;
+        });
+    };
     Dashboard = __decorate([
         Object(vue_class_component__WEBPACK_IMPORTED_MODULE_1__["default"])({
             components: {
@@ -2566,9 +2597,11 @@ var Dashboard = /** @class */ (function (_super) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm.js");
-/* harmony import */ var vue_class_component__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vue-class-component */ "./node_modules/vue-class-component/dist/vue-class-component.esm.js");
-/* harmony import */ var _layouts_Nav_vue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../layouts/Nav.vue */ "./resources/js/layouts/Nav.vue");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm.js");
+/* harmony import */ var vue_class_component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vue-class-component */ "./node_modules/vue-class-component/dist/vue-class-component.esm.js");
+/* harmony import */ var _layouts_Nav_vue__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../layouts/Nav.vue */ "./resources/js/layouts/Nav.vue");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -2591,20 +2624,137 @@ var __decorate = (undefined && undefined.__decorate) || function (decorators, ta
 
 
 
+
 var Roles = /** @class */ (function (_super) {
     __extends(Roles, _super);
     function Roles() {
-        return _super !== null && _super.apply(this, arguments) || this;
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.role = {
+            id: "",
+            role_name: "",
+            description: "",
+        };
+        _this.errors = {
+            role_name: "",
+            description: ""
+        };
+        _this.modalRole = false;
+        _this.modalDelete = false;
+        _this.isupdate = false;
+        return _this;
     }
+    Roles.prototype.openModal = function () {
+        this.modalRole = true;
+    };
+    Roles.prototype.clear = function () {
+        this.modalRole = false;
+        this.modalDelete = false;
+        this.isupdate = false;
+        this.role = {
+            id: "",
+            role_name: "",
+            description: ""
+        };
+        this.errors = {
+            role_name: "",
+            description: ""
+        };
+    };
+    Roles.prototype.create = function () {
+        var _this = this;
+        axios__WEBPACK_IMPORTED_MODULE_0___default.a.post("../api/roles", this.role).then(function (res) {
+            _this.clear();
+            _this.$store.commit("setroles", res.data.roles);
+        }).catch(function (err) {
+            if (err.response.status === 422) {
+                console.log(err.response.data);
+                if (err.response.data.errors.role_name) {
+                    _this.errors.role_name = err.response.data.errors.role_name[0];
+                }
+                else if (!err.response.data.errors.role_name) {
+                    _this.errors.role_name = "";
+                }
+                if (err.response.data.errors.description) {
+                    _this.errors.description = err.response.data.errors.description[0];
+                }
+                else if (!err.response.data.errors.description) {
+                    _this.errors.description = "";
+                }
+            }
+        });
+    };
+    Roles.prototype.showUpdate = function (index) {
+        this.role = {
+            id: this.roles[index].id,
+            role_name: this.roles[index].role_name,
+            description: this.roles[index].description
+        };
+        this.isupdate = true;
+        this.modalRole = true;
+    };
+    Roles.prototype.update = function () {
+        var _this = this;
+        axios__WEBPACK_IMPORTED_MODULE_0___default.a.put("../api/roles/" + this.role.id, this.role).then(function (res) {
+            _this.clear();
+            _this.$store.commit("setroles", res.data.roles);
+        }).catch(function (err) {
+            if (err.response.status === 422) {
+                console.log(err.response.data);
+                if (err.response.data.errors.role_name) {
+                    _this.errors.role_name = err.response.data.errors.role_name[0];
+                }
+                else if (!err.response.data.errors.role_name) {
+                    _this.errors.role_name = "";
+                }
+                if (err.response.data.errors.description) {
+                    _this.errors.description = err.response.data.errors.description[0];
+                }
+                else if (!err.response.data.errors.description) {
+                    _this.errors.description = "";
+                }
+            }
+            else {
+                alert("Nothing Changes");
+            }
+        });
+    };
+    Roles.prototype.showDelete = function (index) {
+        this.role = {
+            id: this.roles[index].id,
+            role_name: this.roles[index].role_name,
+            description: this.roles[index].description
+        };
+        this.modalDelete = true;
+    };
+    Roles.prototype.deleterole = function () {
+        var _this = this;
+        axios__WEBPACK_IMPORTED_MODULE_0___default.a.delete("../api/roles/" + this.role.id).then(function (res) {
+            _this.clear();
+            _this.$store.commit("setroles", res.data.roles);
+        });
+    };
+    Object.defineProperty(Roles.prototype, "roles", {
+        get: function () {
+            return this.$store.getters.getroles;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Roles.prototype.mounted = function () {
+        var _this = this;
+        axios__WEBPACK_IMPORTED_MODULE_0___default.a.get("../api/roles").then(function (res) {
+            _this.$store.commit("setroles", res.data);
+        });
+    };
     Roles = __decorate([
-        Object(vue_class_component__WEBPACK_IMPORTED_MODULE_1__["default"])({
+        Object(vue_class_component__WEBPACK_IMPORTED_MODULE_2__["default"])({
             components: {
-                "nav-component": _layouts_Nav_vue__WEBPACK_IMPORTED_MODULE_2__["default"]
+                "nav-component": _layouts_Nav_vue__WEBPACK_IMPORTED_MODULE_3__["default"]
             }
         })
     ], Roles);
     return Roles;
-}(vue__WEBPACK_IMPORTED_MODULE_0__["default"]));
+}(vue__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Roles);
 
 
@@ -2619,9 +2769,11 @@ var Roles = /** @class */ (function (_super) {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm.js");
-/* harmony import */ var vue_class_component__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vue-class-component */ "./node_modules/vue-class-component/dist/vue-class-component.esm.js");
-/* harmony import */ var _layouts_Nav_vue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../layouts/Nav.vue */ "./resources/js/layouts/Nav.vue");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm.js");
+/* harmony import */ var vue_class_component__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vue-class-component */ "./node_modules/vue-class-component/dist/vue-class-component.esm.js");
+/* harmony import */ var _layouts_Nav_vue__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../layouts/Nav.vue */ "./resources/js/layouts/Nav.vue");
 var __extends = (undefined && undefined.__extends) || (function () {
     var extendStatics = function (d, b) {
         extendStatics = Object.setPrototypeOf ||
@@ -2644,20 +2796,199 @@ var __decorate = (undefined && undefined.__decorate) || function (decorators, ta
 
 
 
+
 var Users = /** @class */ (function (_super) {
     __extends(Users, _super);
     function Users() {
-        return _super !== null && _super.apply(this, arguments) || this;
+        var _this = _super !== null && _super.apply(this, arguments) || this;
+        _this.user = {
+            id: "",
+            fullname: "",
+            email: "",
+            password: "",
+            password_confirmation: "",
+            role_id: ""
+        };
+        _this.errors = {
+            fullname: "",
+            email: "",
+            password: "",
+            password_confirmation: "",
+            role_id: ""
+        };
+        _this.modalUser = false;
+        _this.modalDelete = false;
+        _this.isupdate = false;
+        return _this;
     }
+    Users.prototype.openModal = function () {
+        this.modalUser = true;
+    };
+    Users.prototype.clear = function () {
+        this.modalUser = false;
+        this.modalDelete = false;
+        this.isupdate = false;
+        this.user = {
+            id: "",
+            fullname: "",
+            email: "",
+            password: "",
+            password_confirmation: "",
+            role_id: ""
+        };
+        this.errors = {
+            fullname: "",
+            email: "",
+            password: "",
+            password_confirmation: "",
+            role_id: ""
+        };
+    };
+    Users.prototype.create = function () {
+        var _this = this;
+        axios__WEBPACK_IMPORTED_MODULE_0___default.a.post("../api/users", this.user).then(function (res) {
+            _this.clear();
+            _this.$store.commit("setusers", res.data.users);
+        }).catch(function (err) {
+            if (err.response.status === 422) {
+                console.log(err.response.data);
+                if (err.response.data.errors.fullname) {
+                    _this.errors.fullname = err.response.data.errors.fullname[0];
+                }
+                else if (!err.response.data.errors.fullname) {
+                    _this.errors.fullname = "";
+                }
+                if (err.response.data.errors.email) {
+                    _this.errors.email = err.response.data.errors.email[0];
+                }
+                else if (!err.response.data.errors.email) {
+                    _this.errors.email = "";
+                }
+                if (err.response.data.errors.password) {
+                    _this.errors.password = err.response.data.errors.password[0];
+                }
+                else if (!err.response.data.errors.password) {
+                    _this.errors.password = "";
+                }
+                if (err.response.data.errors.password_confirmation) {
+                    _this.errors.password_confirmation = err.response.data.errors.password_confirmation[0];
+                }
+                else if (!err.response.data.errors.password_confirmation) {
+                    _this.errors.password_confirmation = "";
+                }
+                if (err.response.data.errors.role_id) {
+                    _this.errors.role_id = err.response.data.errors.role_id[0];
+                }
+                else if (!err.response.data.errors.role_id) {
+                    _this.errors.role_id = "";
+                }
+            }
+        });
+    };
+    Users.prototype.showUpdate = function (index) {
+        this.user = {
+            id: this.users[index].id,
+            fullname: this.users[index].fullname,
+            email: this.users[index].email,
+            password: "",
+            password_confirmation: "",
+            role_id: this.users[index].role_id
+        };
+        this.isupdate = true;
+        this.modalUser = true;
+    };
+    Users.prototype.update = function () {
+        var _this = this;
+        axios__WEBPACK_IMPORTED_MODULE_0___default.a.put("../api/users/" + this.user.id, this.user).then(function (res) {
+            _this.clear();
+            _this.$store.commit("setusers", res.data.users);
+        }).catch(function (err) {
+            if (err.response.status === 422) {
+                console.log(err.response.data);
+                if (err.response.data.errors.fullname) {
+                    _this.errors.fullname = err.response.data.errors.fullname[0];
+                }
+                else if (!err.response.data.errors.fullname) {
+                    _this.errors.fullname = "";
+                }
+                if (err.response.data.errors.email) {
+                    _this.errors.email = err.response.data.errors.email[0];
+                }
+                else if (!err.response.data.errors.email) {
+                    _this.errors.email = "";
+                }
+                if (err.response.data.errors.password) {
+                    _this.errors.password = err.response.data.errors.password[0];
+                }
+                else if (!err.response.data.errors.password) {
+                    _this.errors.password = "";
+                }
+                if (err.response.data.errors.password_confirmation) {
+                    _this.errors.password_confirmation = err.response.data.errors.password_confirmation[0];
+                }
+                else if (!err.response.data.errors.password_confirmation) {
+                    _this.errors.password_confirmation = "";
+                }
+                if (err.response.data.errors.role_id) {
+                    _this.errors.role_id = err.response.data.errors.role_id[0];
+                }
+                else if (!err.response.data.errors.role_id) {
+                    _this.errors.role_id = "";
+                }
+            }
+        });
+    };
+    Users.prototype.showDelete = function (index) {
+        this.user = {
+            id: this.users[index].id,
+            fullname: this.users[index].fullname,
+            email: this.users[index].email,
+            password: "",
+            password_confirmation: "",
+            role_id: this.users[index].role_id
+        };
+        this.modalDelete = true;
+    };
+    Users.prototype.deleteuser = function () {
+        var _this = this;
+        axios__WEBPACK_IMPORTED_MODULE_0___default.a.delete("../api/users/" + this.user.id).then(function (res) {
+            _this.clear();
+            _this.$store.commit("setusers", res.data.users);
+        });
+    };
+    Object.defineProperty(Users.prototype, "users", {
+        get: function () {
+            var authId = this.$store.getters.getuserInfo.id;
+            return this.$store.getters.getusers.filter(function (e) { return e.id !== authId; });
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Object.defineProperty(Users.prototype, "roles", {
+        get: function () {
+            return this.$store.getters.getroles;
+        },
+        enumerable: false,
+        configurable: true
+    });
+    Users.prototype.mounted = function () {
+        var _this = this;
+        axios__WEBPACK_IMPORTED_MODULE_0___default.a.get("../api/users").then(function (res) {
+            _this.$store.commit("setusers", res.data);
+        });
+        axios__WEBPACK_IMPORTED_MODULE_0___default.a.get("../api/roles").then(function (res) {
+            _this.$store.commit("setroles", res.data);
+        });
+    };
     Users = __decorate([
-        Object(vue_class_component__WEBPACK_IMPORTED_MODULE_1__["default"])({
+        Object(vue_class_component__WEBPACK_IMPORTED_MODULE_2__["default"])({
             components: {
-                "nav-component": _layouts_Nav_vue__WEBPACK_IMPORTED_MODULE_2__["default"]
+                "nav-component": _layouts_Nav_vue__WEBPACK_IMPORTED_MODULE_3__["default"]
             }
         })
     ], Users);
     return Users;
-}(vue__WEBPACK_IMPORTED_MODULE_0__["default"]));
+}(vue__WEBPACK_IMPORTED_MODULE_1__["default"]));
 /* harmony default export */ __webpack_exports__["default"] = (Users);
 
 
@@ -3014,7 +3345,96 @@ var render = function() {
   var _vm = this
   var _h = _vm.$createElement
   var _c = _vm._self._c || _h
-  return _vm._m(0)
+  return _c(
+    "nav",
+    { staticClass: "navbar navbar-expand-md navbar-dark bg-dark fixed-top" },
+    [
+      _c("a", { staticClass: "navbar-brand", attrs: { href: "#" } }, [
+        _vm._v("Coding Exam")
+      ]),
+      _vm._v(" "),
+      _vm._m(0),
+      _vm._v(" "),
+      _c(
+        "div",
+        {
+          staticClass: "navbar-collapse collapse",
+          attrs: { id: "navbarsExampleDefault" }
+        },
+        [
+          _c("ul", { staticClass: "navbar-nav mr-auto" }, [
+            _c(
+              "li",
+              {
+                staticClass: "nav-item",
+                class: _vm.link === "dashboard" ? "active" : ""
+              },
+              [
+                _c(
+                  "router-link",
+                  {
+                    staticClass: "nav-link",
+                    attrs: { to: "/dashboard", href: "#" }
+                  },
+                  [_vm._v("Dashboard")]
+                )
+              ],
+              1
+            ),
+            _vm._v(" "),
+            _c(
+              "li",
+              {
+                staticClass: "nav-item",
+                class: _vm.link === "users" ? "active" : ""
+              },
+              [
+                _c(
+                  "router-link",
+                  {
+                    staticClass: "nav-link",
+                    attrs: { to: "/users", href: "#" }
+                  },
+                  [_vm._v("Users")]
+                )
+              ],
+              1
+            ),
+            _vm._v(" "),
+            _c(
+              "li",
+              {
+                staticClass: "nav-item",
+                class: _vm.link === "roles" ? "active" : ""
+              },
+              [
+                _c(
+                  "router-link",
+                  {
+                    staticClass: "nav-link",
+                    attrs: { to: "/roles", href: "#" }
+                  },
+                  [_vm._v("Roles")]
+                )
+              ],
+              1
+            )
+          ]),
+          _vm._v(" "),
+          _c("div", { staticClass: "form-inline my-2 my-lg-0" }, [
+            _c(
+              "button",
+              {
+                staticClass: "btn btn-outline-success my-2 my-sm-0",
+                on: { click: _vm.signout }
+              },
+              [_vm._v("Sign out")]
+            )
+          ])
+        ]
+      )
+    ]
+  )
 }
 var staticRenderFns = [
   function() {
@@ -3022,67 +3442,19 @@ var staticRenderFns = [
     var _h = _vm.$createElement
     var _c = _vm._self._c || _h
     return _c(
-      "nav",
-      { staticClass: "navbar navbar-expand-md navbar-dark bg-dark fixed-top" },
-      [
-        _c("a", { staticClass: "navbar-brand", attrs: { href: "#" } }, [
-          _vm._v("Coding Exam")
-        ]),
-        _vm._v(" "),
-        _c(
-          "button",
-          {
-            staticClass: "navbar-toggler collapsed",
-            attrs: {
-              type: "button",
-              "data-toggle": "collapse",
-              "data-target": "#navbarsExampleDefault",
-              "aria-controls": "navbarsExampleDefault",
-              "aria-expanded": "false",
-              "aria-label": "Toggle navigation"
-            }
-          },
-          [_c("span", { staticClass: "navbar-toggler-icon" })]
-        ),
-        _vm._v(" "),
-        _c(
-          "div",
-          {
-            staticClass: "navbar-collapse collapse",
-            attrs: { id: "navbarsExampleDefault" }
-          },
-          [
-            _c("ul", { staticClass: "navbar-nav mr-auto" }, [
-              _c("li", { staticClass: "nav-item active" }, [
-                _c("a", { staticClass: "nav-link", attrs: { href: "#" } }, [
-                  _vm._v("Dashboard "),
-                  _c("span", { staticClass: "sr-only" }, [_vm._v("(current)")])
-                ])
-              ]),
-              _vm._v(" "),
-              _c("li", { staticClass: "nav-item" }, [
-                _c("a", { staticClass: "nav-link", attrs: { href: "#" } }, [
-                  _vm._v("Users")
-                ])
-              ]),
-              _vm._v(" "),
-              _c("li", { staticClass: "nav-item" }, [
-                _c("a", { staticClass: "nav-link", attrs: { href: "#" } }, [
-                  _vm._v("Roles")
-                ])
-              ])
-            ]),
-            _vm._v(" "),
-            _c("div", { staticClass: "form-inline my-2 my-lg-0" }, [
-              _c(
-                "button",
-                { staticClass: "btn btn-outline-success my-2 my-sm-0" },
-                [_vm._v("Sign out")]
-              )
-            ])
-          ]
-        )
-      ]
+      "button",
+      {
+        staticClass: "navbar-toggler collapsed",
+        attrs: {
+          type: "button",
+          "data-toggle": "collapse",
+          "data-target": "#navbarsExampleDefault",
+          "aria-controls": "navbarsExampleDefault",
+          "aria-expanded": "false",
+          "aria-label": "Toggle navigation"
+        }
+      },
+      [_c("span", { staticClass: "navbar-toggler-icon" })]
     )
   }
 ]
@@ -3201,7 +3573,7 @@ var render = function() {
               "button",
               {
                 staticClass: "btn btn-lg btn-primary btn-block",
-                on: { click: _vm.sigin }
+                on: { click: _vm.signin }
               },
               [_vm._v("Sign in")]
             )
@@ -3235,7 +3607,70 @@ var render = function() {
   var _c = _vm._self._c || _h
   return _c(
     "div",
-    [_c("nav-component"), _vm._v(" "), _c("div", { staticClass: "container" })],
+    [
+      _c("nav-component", { attrs: { link: "dashboard" } }),
+      _vm._v(" "),
+      _c(
+        "div",
+        {
+          staticClass: "container text-center",
+          staticStyle: { "margin-top": "10%" }
+        },
+        [
+          _c("h2", { staticStyle: { "font-weight": "900" } }, [
+            _vm._v("Welcome back " + _vm._s(_vm.userinfo.fullname) + "!")
+          ]),
+          _vm._v(" "),
+          _c("div", { staticClass: "row mt-5" }, [
+            _c("div", { staticClass: "col-md-4 mr-auto ml-auto" }, [
+              _c(
+                "div",
+                { staticClass: "card shadow p-3 mb-2 bg-white rounded" },
+                [
+                  _c("div", { staticClass: "card-body text-center" }, [
+                    _c(
+                      "h2",
+                      {
+                        staticClass: "mb-0",
+                        staticStyle: { "font-weight": "900" }
+                      },
+                      [_vm._v(_vm._s(_vm.total_users))]
+                    ),
+                    _vm._v(" "),
+                    _c("p", { staticStyle: { "font-weight": "900" } }, [
+                      _vm._v("Total Number of Users")
+                    ])
+                  ])
+                ]
+              )
+            ]),
+            _vm._v(" "),
+            _c("div", { staticClass: "col-md-4 mr-auto ml-auto" }, [
+              _c(
+                "div",
+                { staticClass: "card shadow p-3 mb-2 bg-white rounded" },
+                [
+                  _c("div", { staticClass: "card-body text-center" }, [
+                    _c(
+                      "h2",
+                      {
+                        staticClass: "mb-0",
+                        staticStyle: { "font-weight": "900" }
+                      },
+                      [_vm._v(_vm._s(_vm.total_roles))]
+                    ),
+                    _vm._v(" "),
+                    _c("p", { staticStyle: { "font-weight": "900" } }, [
+                      _vm._v("Total Number of Roles")
+                    ])
+                  ])
+                ]
+              )
+            ])
+          ])
+        ]
+      )
+    ],
     1
   )
 }
@@ -3263,11 +3698,378 @@ var render = function() {
   var _c = _vm._self._c || _h
   return _c(
     "div",
-    [_c("nav-component"), _vm._v(" "), _c("div", { staticClass: "container" })],
+    [
+      _c("nav-component", { attrs: { link: "roles" } }),
+      _vm._v(" "),
+      _c(
+        "div",
+        { staticClass: "container", staticStyle: { "margin-top": "6%" } },
+        [
+          _c("div", { staticClass: "row" }, [
+            _c("div", { staticClass: "col-md-8 mr-auto ml-auto" }, [
+              _c(
+                "h2",
+                {
+                  staticClass: "float-left",
+                  staticStyle: { "font-weight": "900" }
+                },
+                [_vm._v("Roles Page")]
+              ),
+              _vm._v(" "),
+              _c(
+                "button",
+                {
+                  staticClass: "btn btn-sm btn-primary float-right",
+                  on: { click: _vm.openModal }
+                },
+                [_vm._v(" New User ")]
+              )
+            ])
+          ]),
+          _vm._v(" "),
+          _c("hr"),
+          _vm._v(" "),
+          _c(
+            "div",
+            { staticClass: "row" },
+            [
+              _vm._m(0),
+              _vm._v(" "),
+              _vm._l(_vm.roles, function(r, index) {
+                return _c(
+                  "div",
+                  { key: r.id, staticClass: "col-md-8 mr-auto ml-auto mb-2" },
+                  [
+                    _c(
+                      "div",
+                      { staticClass: "card shadow p-2 mb-2 bg-white rounded" },
+                      [
+                        _c("div", { staticClass: "card-body" }, [
+                          _c("div", { staticClass: "float-left" }, [
+                            _c(
+                              "h6",
+                              {
+                                staticClass: "mb-0",
+                                staticStyle: { "font-weight": "800" }
+                              },
+                              [_vm._v(_vm._s(r.role_name))]
+                            ),
+                            _vm._v(" "),
+                            _c("p", [_vm._v(_vm._s(r.description))])
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "float-right" }, [
+                            _c(
+                              "div",
+                              {
+                                staticClass: "btn-toolbar",
+                                attrs: {
+                                  role: "toolbar",
+                                  "aria-label": "Toolbar with button groups"
+                                }
+                              },
+                              [
+                                _c(
+                                  "div",
+                                  {
+                                    staticClass: "btn-group mr-2",
+                                    attrs: {
+                                      role: "group",
+                                      "aria-label": "First group"
+                                    }
+                                  },
+                                  [
+                                    _c(
+                                      "button",
+                                      {
+                                        staticClass: "btn btn-primary",
+                                        attrs: { type: "button" },
+                                        on: {
+                                          click: function($event) {
+                                            return _vm.showUpdate(index)
+                                          }
+                                        }
+                                      },
+                                      [
+                                        _vm._v(
+                                          "\n                                        Update\n                                    "
+                                        )
+                                      ]
+                                    )
+                                  ]
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "div",
+                                  {
+                                    staticClass: "btn-group mr-2",
+                                    attrs: {
+                                      role: "group",
+                                      "aria-label": "Second group"
+                                    }
+                                  },
+                                  [
+                                    _c(
+                                      "button",
+                                      {
+                                        staticClass: "btn btn-danger",
+                                        attrs: { type: "button" },
+                                        on: {
+                                          click: function($event) {
+                                            return _vm.showDelete(index)
+                                          }
+                                        }
+                                      },
+                                      [
+                                        _vm._v(
+                                          "\n                                        Delete\n                                    "
+                                        )
+                                      ]
+                                    )
+                                  ]
+                                )
+                              ]
+                            )
+                          ])
+                        ])
+                      ]
+                    )
+                  ]
+                )
+              })
+            ],
+            2
+          )
+        ]
+      ),
+      _vm._v(" "),
+      _c(
+        "div",
+        {
+          staticClass: "modal fade",
+          class: _vm.modalRole ? "show" : "",
+          style: _vm.modalRole ? "display: block" : "display: none",
+          attrs: { tabindex: "-1", role: "dialog" }
+        },
+        [
+          _c(
+            "div",
+            { staticClass: "modal-dialog", attrs: { role: "document" } },
+            [
+              _c("div", { staticClass: "modal-content" }, [
+                _c("div", { staticClass: "modal-header" }, [
+                  !_vm.isupdate
+                    ? _c("h5", { staticClass: "modal-title" }, [
+                        _vm._v("Create New Role")
+                      ])
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _vm.isupdate
+                    ? _c("h5", { staticClass: "modal-title" }, [
+                        _vm._v("Update Role")
+                      ])
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _c(
+                    "button",
+                    {
+                      staticClass: "close",
+                      attrs: { type: "button", "aria-label": "Close" },
+                      on: { click: _vm.clear }
+                    },
+                    [
+                      _c("span", { attrs: { "aria-hidden": "true" } }, [
+                        _vm._v("×")
+                      ])
+                    ]
+                  )
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "modal-body" }, [
+                  _c("div", { staticClass: "form-group" }, [
+                    _c("label", [_vm._v("Role Name")]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.role.role_name,
+                          expression: "role.role_name"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: { type: "text" },
+                      domProps: { value: _vm.role.role_name },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.$set(_vm.role, "role_name", $event.target.value)
+                        }
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c(
+                      "p",
+                      {
+                        staticClass: "text-danger",
+                        staticStyle: { "font-size": "12px" }
+                      },
+                      [_vm._v(_vm._s(_vm.errors.role_name))]
+                    )
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "form-group" }, [
+                    _c("label", [_vm._v("Description")]),
+                    _vm._v(" "),
+                    _c("textarea", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.role.description,
+                          expression: "role.description"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: { rows: "4" },
+                      domProps: { value: _vm.role.description },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.$set(_vm.role, "description", $event.target.value)
+                        }
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c(
+                      "p",
+                      {
+                        staticClass: "text-danger",
+                        staticStyle: { "font-size": "12px" }
+                      },
+                      [_vm._v(_vm._s(_vm.errors.description))]
+                    )
+                  ])
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "modal-footer" }, [
+                  !_vm.isupdate
+                    ? _c(
+                        "button",
+                        {
+                          staticClass: "btn btn-primary",
+                          attrs: { type: "button" },
+                          on: { click: _vm.create }
+                        },
+                        [_vm._v("Save changes")]
+                      )
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _vm.isupdate
+                    ? _c(
+                        "button",
+                        {
+                          staticClass: "btn btn-primary",
+                          attrs: { type: "button" },
+                          on: { click: _vm.update }
+                        },
+                        [_vm._v("Update changes")]
+                      )
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _c(
+                    "button",
+                    {
+                      staticClass: "btn btn-secondary",
+                      attrs: { type: "button" },
+                      on: { click: _vm.clear }
+                    },
+                    [_vm._v("Close")]
+                  )
+                ])
+              ])
+            ]
+          )
+        ]
+      ),
+      _vm._v(" "),
+      _c(
+        "div",
+        {
+          staticClass: "modal fade",
+          class: _vm.modalDelete ? "show" : "",
+          style: _vm.modalDelete ? "display: block" : "display: none",
+          attrs: { tabindex: "-1", role: "dialog" }
+        },
+        [
+          _c(
+            "div",
+            {
+              staticClass: "modal-dialog modal-sm",
+              attrs: { role: "document" }
+            },
+            [
+              _c("div", { staticClass: "modal-content" }, [
+                _c("div", { staticClass: "modal-header" }, [
+                  _c("h5", { staticClass: "modal-title" }, [
+                    _vm._v("Delete Role")
+                  ]),
+                  _vm._v(" "),
+                  _c(
+                    "button",
+                    {
+                      staticClass: "close",
+                      attrs: { type: "button", "aria-label": "Close" },
+                      on: { click: _vm.clear }
+                    },
+                    [
+                      _c("span", { attrs: { "aria-hidden": "true" } }, [
+                        _vm._v("×")
+                      ])
+                    ]
+                  )
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "modal-body text-center" }, [
+                  _c("h4", [_vm._v("Are you sure you want to delete?")]),
+                  _vm._v(" "),
+                  _c(
+                    "button",
+                    {
+                      staticClass: "btn btn-danger",
+                      on: { click: _vm.deleterole }
+                    },
+                    [_vm._v("Delete")]
+                  )
+                ])
+              ])
+            ]
+          )
+        ]
+      )
+    ],
     1
   )
 }
-var staticRenderFns = []
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "col-md-8 mr-auto ml-auto" }, [
+      _c(
+        "h4",
+        { staticClass: "float-left", staticStyle: { "font-weight": "900" } },
+        [_vm._v("Roles List")]
+      )
+    ])
+  }
+]
 render._withStripped = true
 
 
@@ -3291,11 +4093,511 @@ var render = function() {
   var _c = _vm._self._c || _h
   return _c(
     "div",
-    [_c("nav-component"), _vm._v(" "), _c("div", { staticClass: "container" })],
+    [
+      _c("nav-component", { attrs: { link: "users" } }),
+      _vm._v(" "),
+      _c(
+        "div",
+        { staticClass: "container", staticStyle: { "margin-top": "6%" } },
+        [
+          _c("div", { staticClass: "row" }, [
+            _c("div", { staticClass: "col-md-8 mr-auto ml-auto" }, [
+              _c(
+                "h2",
+                {
+                  staticClass: "float-left",
+                  staticStyle: { "font-weight": "900" }
+                },
+                [_vm._v("Users Page")]
+              ),
+              _vm._v(" "),
+              _c(
+                "button",
+                {
+                  staticClass: "btn btn-sm btn-primary float-right",
+                  on: { click: _vm.openModal }
+                },
+                [_vm._v(" New User ")]
+              )
+            ])
+          ]),
+          _vm._v(" "),
+          _c("hr"),
+          _vm._v(" "),
+          _c(
+            "div",
+            { staticClass: "row" },
+            [
+              _vm._m(0),
+              _vm._v(" "),
+              _vm._l(_vm.users, function(u, index) {
+                return _c(
+                  "div",
+                  { key: u.id, staticClass: "col-md-8 mr-auto ml-auto" },
+                  [
+                    _c(
+                      "div",
+                      { staticClass: "card shadow p-2 mb-2 bg-white rounded" },
+                      [
+                        _c("div", { staticClass: "card-body" }, [
+                          _c("div", { staticClass: "float-left" }, [
+                            _c(
+                              "h6",
+                              {
+                                staticClass: "mb-0",
+                                staticStyle: { "font-weight": "800" }
+                              },
+                              [_vm._v(_vm._s(u.fullname))]
+                            ),
+                            _vm._v(" "),
+                            _c("p", [_vm._v(_vm._s(u.email))]),
+                            _vm._v(" "),
+                            _c("span", { staticClass: "badge badge-success" }, [
+                              _vm._v(_vm._s(u.role_name))
+                            ])
+                          ]),
+                          _vm._v(" "),
+                          _c("div", { staticClass: "float-right" }, [
+                            _c(
+                              "div",
+                              {
+                                staticClass: "btn-toolbar",
+                                attrs: {
+                                  role: "toolbar",
+                                  "aria-label": "Toolbar with button groups"
+                                }
+                              },
+                              [
+                                _c(
+                                  "div",
+                                  {
+                                    staticClass: "btn-group mr-2",
+                                    attrs: {
+                                      role: "group",
+                                      "aria-label": "First group"
+                                    }
+                                  },
+                                  [
+                                    _c(
+                                      "button",
+                                      {
+                                        staticClass: "btn btn-primary",
+                                        attrs: { type: "button" },
+                                        on: {
+                                          click: function($event) {
+                                            return _vm.showUpdate(index)
+                                          }
+                                        }
+                                      },
+                                      [
+                                        _vm._v(
+                                          "\n                                        Update\n                                    "
+                                        )
+                                      ]
+                                    )
+                                  ]
+                                ),
+                                _vm._v(" "),
+                                _c(
+                                  "div",
+                                  {
+                                    staticClass: "btn-group mr-2",
+                                    attrs: {
+                                      role: "group",
+                                      "aria-label": "Second group"
+                                    }
+                                  },
+                                  [
+                                    _c(
+                                      "button",
+                                      {
+                                        staticClass: "btn btn-danger",
+                                        attrs: { type: "button" },
+                                        on: {
+                                          click: function($event) {
+                                            return _vm.showDelete(index)
+                                          }
+                                        }
+                                      },
+                                      [
+                                        _vm._v(
+                                          "\n                                        Delete\n                                    "
+                                        )
+                                      ]
+                                    )
+                                  ]
+                                )
+                              ]
+                            )
+                          ])
+                        ])
+                      ]
+                    )
+                  ]
+                )
+              })
+            ],
+            2
+          )
+        ]
+      ),
+      _vm._v(" "),
+      _c(
+        "div",
+        {
+          staticClass: "modal fade",
+          class: _vm.modalUser ? "show" : "",
+          style: _vm.modalUser ? "display: block" : "display: none",
+          attrs: { tabindex: "-1", role: "dialog" }
+        },
+        [
+          _c(
+            "div",
+            { staticClass: "modal-dialog", attrs: { role: "document" } },
+            [
+              _c("div", { staticClass: "modal-content" }, [
+                _c("div", { staticClass: "modal-header" }, [
+                  !_vm.isupdate
+                    ? _c("h5", { staticClass: "modal-title" }, [
+                        _vm._v("Create New User")
+                      ])
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _vm.isupdate
+                    ? _c("h5", { staticClass: "modal-title" }, [
+                        _vm._v("Update User")
+                      ])
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _c(
+                    "button",
+                    {
+                      staticClass: "close",
+                      attrs: { type: "button", "aria-label": "Close" },
+                      on: { click: _vm.clear }
+                    },
+                    [
+                      _c("span", { attrs: { "aria-hidden": "true" } }, [
+                        _vm._v("×")
+                      ])
+                    ]
+                  )
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "modal-body" }, [
+                  _c("div", { staticClass: "form-group" }, [
+                    _c("label", [_vm._v("Fullname")]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.user.fullname,
+                          expression: "user.fullname"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: { type: "text" },
+                      domProps: { value: _vm.user.fullname },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.$set(_vm.user, "fullname", $event.target.value)
+                        }
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c(
+                      "p",
+                      {
+                        staticClass: "text-danger",
+                        staticStyle: { "font-size": "12px" }
+                      },
+                      [_vm._v(_vm._s(_vm.errors.fullname))]
+                    )
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "form-group" }, [
+                    _c("label", [_vm._v("Email")]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.user.email,
+                          expression: "user.email"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: { type: "text" },
+                      domProps: { value: _vm.user.email },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.$set(_vm.user, "email", $event.target.value)
+                        }
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c(
+                      "p",
+                      {
+                        staticClass: "text-danger",
+                        staticStyle: { "font-size": "12px" }
+                      },
+                      [_vm._v(_vm._s(_vm.errors.email))]
+                    )
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "form-group" }, [
+                    _c("label", [_vm._v("Password")]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.user.password,
+                          expression: "user.password"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: { type: "password" },
+                      domProps: { value: _vm.user.password },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.$set(_vm.user, "password", $event.target.value)
+                        }
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c(
+                      "p",
+                      {
+                        staticClass: "text-danger",
+                        staticStyle: { "font-size": "12px" }
+                      },
+                      [_vm._v(_vm._s(_vm.errors.password))]
+                    )
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "form-group" }, [
+                    _c("label", [_vm._v("Confirm Password")]),
+                    _vm._v(" "),
+                    _c("input", {
+                      directives: [
+                        {
+                          name: "model",
+                          rawName: "v-model",
+                          value: _vm.user.password_confirmation,
+                          expression: "user.password_confirmation"
+                        }
+                      ],
+                      staticClass: "form-control",
+                      attrs: { type: "password" },
+                      domProps: { value: _vm.user.password_confirmation },
+                      on: {
+                        input: function($event) {
+                          if ($event.target.composing) {
+                            return
+                          }
+                          _vm.$set(
+                            _vm.user,
+                            "password_confirmation",
+                            $event.target.value
+                          )
+                        }
+                      }
+                    }),
+                    _vm._v(" "),
+                    _c(
+                      "p",
+                      {
+                        staticClass: "text-danger",
+                        staticStyle: { "font-size": "12px" }
+                      },
+                      [_vm._v(_vm._s(_vm.errors.password_confirmation))]
+                    )
+                  ]),
+                  _vm._v(" "),
+                  _c("div", { staticClass: "form-group" }, [
+                    _c("label", [_vm._v("Role")]),
+                    _vm._v(" "),
+                    _c(
+                      "select",
+                      {
+                        directives: [
+                          {
+                            name: "model",
+                            rawName: "v-model",
+                            value: _vm.user.role_id,
+                            expression: "user.role_id"
+                          }
+                        ],
+                        staticClass: "form-control",
+                        on: {
+                          change: function($event) {
+                            var $$selectedVal = Array.prototype.filter
+                              .call($event.target.options, function(o) {
+                                return o.selected
+                              })
+                              .map(function(o) {
+                                var val = "_value" in o ? o._value : o.value
+                                return val
+                              })
+                            _vm.$set(
+                              _vm.user,
+                              "role_id",
+                              $event.target.multiple
+                                ? $$selectedVal
+                                : $$selectedVal[0]
+                            )
+                          }
+                        }
+                      },
+                      _vm._l(_vm.roles, function(role) {
+                        return _c(
+                          "option",
+                          { key: role.id, domProps: { value: role.id } },
+                          [_vm._v(_vm._s(role.role_name))]
+                        )
+                      }),
+                      0
+                    ),
+                    _vm._v(" "),
+                    _c(
+                      "p",
+                      {
+                        staticClass: "text-danger",
+                        staticStyle: { "font-size": "12px" }
+                      },
+                      [_vm._v(_vm._s(_vm.errors.role_id))]
+                    )
+                  ])
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "modal-footer" }, [
+                  !_vm.isupdate
+                    ? _c(
+                        "button",
+                        {
+                          staticClass: "btn btn-primary",
+                          attrs: { type: "button" },
+                          on: { click: _vm.create }
+                        },
+                        [_vm._v("Save changes")]
+                      )
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _vm.isupdate
+                    ? _c(
+                        "button",
+                        {
+                          staticClass: "btn btn-primary",
+                          attrs: { type: "button" },
+                          on: { click: _vm.update }
+                        },
+                        [_vm._v("Update changes")]
+                      )
+                    : _vm._e(),
+                  _vm._v(" "),
+                  _c(
+                    "button",
+                    {
+                      staticClass: "btn btn-secondary",
+                      attrs: { type: "button" },
+                      on: { click: _vm.clear }
+                    },
+                    [_vm._v("Close")]
+                  )
+                ])
+              ])
+            ]
+          )
+        ]
+      ),
+      _vm._v(" "),
+      _c(
+        "div",
+        {
+          staticClass: "modal fade",
+          class: _vm.modalDelete ? "show" : "",
+          style: _vm.modalDelete ? "display: block" : "display: none",
+          attrs: { tabindex: "-1", role: "dialog" }
+        },
+        [
+          _c(
+            "div",
+            {
+              staticClass: "modal-dialog modal-sm",
+              attrs: { role: "document" }
+            },
+            [
+              _c("div", { staticClass: "modal-content" }, [
+                _c("div", { staticClass: "modal-header" }, [
+                  _c("h5", { staticClass: "modal-title" }, [
+                    _vm._v("Delete User")
+                  ]),
+                  _vm._v(" "),
+                  _c(
+                    "button",
+                    {
+                      staticClass: "close",
+                      attrs: { type: "button", "aria-label": "Close" },
+                      on: { click: _vm.clear }
+                    },
+                    [
+                      _c("span", { attrs: { "aria-hidden": "true" } }, [
+                        _vm._v("×")
+                      ])
+                    ]
+                  )
+                ]),
+                _vm._v(" "),
+                _c("div", { staticClass: "modal-body text-center" }, [
+                  _c("h4", [_vm._v("Are you sure you want to delete?")]),
+                  _vm._v(" "),
+                  _c(
+                    "button",
+                    {
+                      staticClass: "btn btn-danger",
+                      on: { click: _vm.deleteuser }
+                    },
+                    [_vm._v("Delete")]
+                  )
+                ])
+              ])
+            ]
+          )
+        ]
+      )
+    ],
     1
   )
 }
-var staticRenderFns = []
+var staticRenderFns = [
+  function() {
+    var _vm = this
+    var _h = _vm.$createElement
+    var _c = _vm._self._c || _h
+    return _c("div", { staticClass: "col-md-8 mr-auto ml-auto" }, [
+      _c(
+        "h4",
+        { staticClass: "float-left", staticStyle: { "font-weight": "900" } },
+        [_vm._v("Users List")]
+      )
+    ])
+  }
+]
 render._withStripped = true
 
 
@@ -20168,9 +21470,9 @@ vue__WEBPACK_IMPORTED_MODULE_0__["default"].use(vue_router__WEBPACK_IMPORTED_MOD
         {
             path: '/dashboard',
             name: 'Dashboard',
-            beforeEnter: function (to, from, next) {
-                localStorage.getItem("user") ? next() : next("/");
-            },
+            // beforeEnter: (to, from, next) => {
+            //     localStorage.getItem("user") ? next() : next("/");
+            // },
             component: _views_Dashboard_vue__WEBPACK_IMPORTED_MODULE_3__["default"]
         },
         {
@@ -20195,6 +21497,38 @@ vue__WEBPACK_IMPORTED_MODULE_0__["default"].use(vue_router__WEBPACK_IMPORTED_MOD
 
 /***/ }),
 
+/***/ "./resources/js/store/auth/index.ts":
+/*!******************************************!*\
+  !*** ./resources/js/store/auth/index.ts ***!
+  \******************************************/
+/*! exports provided: auth */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "auth", function() { return auth; });
+var state = {
+    userInfo: JSON.parse(window.localStorage.getItem("user") || '{}')
+};
+var getters = {
+    getuserInfo: function (state) {
+        return state.userInfo;
+    }
+};
+var mutations = {
+    setuserInfo: function (state, response) {
+        state.userInfo = response.user;
+    }
+};
+var auth = {
+    state: state,
+    getters: getters,
+    mutations: mutations
+};
+
+
+/***/ }),
+
 /***/ "./resources/js/store/index.ts":
 /*!*************************************!*\
   !*** ./resources/js/store/index.ts ***!
@@ -20206,16 +21540,87 @@ vue__WEBPACK_IMPORTED_MODULE_0__["default"].use(vue_router__WEBPACK_IMPORTED_MOD
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm.js");
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm.js");
+/* harmony import */ var _auth__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./auth */ "./resources/js/store/auth/index.ts");
+/* harmony import */ var _roles__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./roles */ "./resources/js/store/roles/index.ts");
+/* harmony import */ var _users__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./users */ "./resources/js/store/users/index.ts");
+
+
+
 
 
 vue__WEBPACK_IMPORTED_MODULE_1__["default"].use(vuex__WEBPACK_IMPORTED_MODULE_0__["default"]);
 var store = {
-    state: {
-        helloword: "trial"
-    },
-    modules: {}
+    modules: {
+        auth: _auth__WEBPACK_IMPORTED_MODULE_2__["auth"],
+        roles: _roles__WEBPACK_IMPORTED_MODULE_3__["roles"],
+        users: _users__WEBPACK_IMPORTED_MODULE_4__["users"]
+    }
 };
 /* harmony default export */ __webpack_exports__["default"] = (new vuex__WEBPACK_IMPORTED_MODULE_0__["default"].Store(store));
+
+
+/***/ }),
+
+/***/ "./resources/js/store/roles/index.ts":
+/*!*******************************************!*\
+  !*** ./resources/js/store/roles/index.ts ***!
+  \*******************************************/
+/*! exports provided: roles */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "roles", function() { return roles; });
+var state = {
+    roles: []
+};
+var getters = {
+    getroles: function (state) {
+        return state.roles;
+    }
+};
+var mutations = {
+    setroles: function (state, response) {
+        state.roles = response;
+    }
+};
+var roles = {
+    state: state,
+    getters: getters,
+    mutations: mutations
+};
+
+
+/***/ }),
+
+/***/ "./resources/js/store/users/index.ts":
+/*!*******************************************!*\
+  !*** ./resources/js/store/users/index.ts ***!
+  \*******************************************/
+/*! exports provided: users */
+/***/ (function(module, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "users", function() { return users; });
+var state = {
+    users: []
+};
+var getters = {
+    getusers: function (state) {
+        return state.users;
+    }
+};
+var mutations = {
+    setusers: function (state, response) {
+        state.users = response;
+    }
+};
+var users = {
+    state: state,
+    getters: getters,
+    mutations: mutations
+};
 
 
 /***/ }),
