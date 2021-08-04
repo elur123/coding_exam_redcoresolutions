@@ -6,3 +6,8 @@
 - php artisan migrate:fresh --seed.
 - php artisan serve.
 
+
+## Default Access
+
+- email: admin@gmail.com
+- password: admin123
