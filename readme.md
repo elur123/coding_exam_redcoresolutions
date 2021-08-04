@@ -1,4 +1,3 @@
-
 ## Coding Exam
 
 - composer install.
@@ -11,3 +10,9 @@
 
 - email: admin@gmail.com
 - password: admin123
+
+## Tech Stack
+
+- Backend: Laravel Framework
+- Frontend: Vuejs (Typescript)
+- Database: Mysql
