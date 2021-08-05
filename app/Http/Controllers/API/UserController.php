@@ -6,23 +6,16 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+
+use App\User;
 class UserController extends Controller
 {
     function index(){
-        $users = DB::table('users')
-        ->select('users.*', 'roles.role_name')
-        ->leftJoin('roles', 'users.role_id', 'roles.id')
-        ->get();
-
-        return $users;
+        return User::with('role:id,role_name')->get();
     }
 
     function details($id){
-        $details = DB::table('users')
-        ->where('id', $id)
-        ->first();
-
-        return $details;
+        return User::find($id);
     }
 
     function create(Request $request){
@@ -34,22 +27,16 @@ class UserController extends Controller
             'role_id' => 'required'
         ]);
 
-        $create = DB::table('users')
-        ->insert([
-            'fullname' => $request->fullname,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'password_confirmation' => Hash::make($request->password_confirmation),
-            'role_id' => $request->role_id,
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
+        $user = new User;
+        $user->fullname = $request->fullname;
+        $user->email = $request->email;
+        $user->password = Hash::make($request->password);
+        $user->password_confirmation = Hash::make($request->password_confirmation);
+        $user->role_id = $request->role_id;
+        $user->created_at = date('Y-m-d H:i:s');
+        $user->save();
 
-        if ($create) {
-            return response()->json(["success" => true, "users" => $this->index()], 200);
-        }
-        else{
-            return response()->json(["success" => false, "users" => $this->index()], 500);
-        }
+        return response()->json(["success" => true, "users" => $this->index()], 200);
     }
 
     function update(Request $request, $id){
@@ -59,44 +46,31 @@ class UserController extends Controller
             'role_id' => 'required'
         ]);
 
+        $user = User::find($id);
+
         if ($request->password != null) {
             $this->validate($request, [
                 'password' => 'required|min:8',
                 'password_confirmation' => 'required|same:password',
             ]);
 
-            DB::table('users')
-            ->where('id', $id)
-            ->update([
-                'password' => Hash::make($request->password),
-                'password_confirmation' => Hash::make($request->password_confirmation)
-            ]);
+            $user->password = $request->password;
+            $user->password_confirmation = $request->password_confirmation;
         }
 
-        DB::table('users')
-        ->where('id', $id)
-        ->update([
-            'fullname' => $request->fullname,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'password_confirmation' => Hash::make($request->password_confirmation),
-            'role_id' => $request->role_id,
-            'updated_at' => date('Y-m-d H:i:s')
-        ]);
+        $user->fullname = $request->fullname;
+        $user->email = $request->email;
+        $user->role_id = $request->role_id;
+        $user->updated_at = date('Y-m-d H:i:s');
+        $user->save();
 
         return response()->json(["success" => true, "users" => $this->index()], 200);
     }
 
     function delete($id){
-        $delete = DB::table('users')
-        ->where('id',  $id)
-        ->delete();
+        $user = User::find($id);
+        $user->delete();
 
-        if ($delete) {
-            return response()->json(["success" => true, "users" => $this->index()], 200);
-        }
-        else{
-            return response()->json(["success" => false, "users" => $this->index()], 500);
-        }
+        return response()->json(["success" => true, "users" => $this->index()], 200);
     }
 }

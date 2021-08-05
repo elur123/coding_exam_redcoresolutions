@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+
+use App\User;
 class LoginController extends Controller
 {
     function login(Request $request){
@@ -19,13 +21,12 @@ class LoginController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        $check = DB::table('users')
-        ->where('email', $request->email)
+        $user = User::where('email', $request->email)
         ->first();
 
-        if ($check !== null) {
-            if (Hash::check($request->password, $check->password)) {
-                return response()->json(['success' => true, "user" => $check], 200);
+        if ($user !== null) {
+            if (Hash::check($request->password, $user->password)) {
+                return response()->json(['success' => true, "user" => $user], 200);
             }
             else{
                 return response()->json(['success' => false, "user" => null], 500);

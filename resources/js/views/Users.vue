@@ -19,7 +19,7 @@
                             <div class="float-left">
                                 <h6 class="mb-0" style="font-weight: 800;">{{ u.fullname }}</h6>
                                 <p>{{ u.email }}</p>
-                                <span class="badge badge-success">{{ u.role_name }}</span>
+                                <span class="badge badge-success">{{ u.role.role_name }}</span>
                             </div>
                             <div class="float-right">
                                 <div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups">

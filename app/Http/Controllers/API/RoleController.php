@@ -5,21 +5,16 @@ namespace App\Http\Controllers\API;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\DB;
+
+use App\Role;
 class RoleController extends Controller
 {
     function index(){
-        $roles = DB::table('roles')
-        ->get();
-
-        return $roles;
+        return Role::all();;
     }
 
     function details($id){
-        $details = DB::table('roles')
-        ->where('id', $id)
-        ->first();
-
-        return $details;
+        return Role::find($id);
     }
 
     function create(Request $request){
@@ -28,19 +23,12 @@ class RoleController extends Controller
             'description' => 'required'
         ]);
 
-        $create = DB::table('roles')
-        ->insert([
-            'role_name' => $request->role_name,
-            'description' => $request->description,
-            'created_at' => date('Y-m-d H:i:s')
-        ]);
+        $role = new Role;
+        $role->role_name = $request->role_name;
+        $role->description = $request->description;
+        $role->save();
 
-        if ($create) {
-            return response()->json(["success" => true, "roles" => $this->index()], 200);
-        }
-        else{
-            return response()->json(["success" => false, "roles" => $this->index()], 500);
-        }
+        return response()->json(["success" => true, "roles" => $this->index()], 200);
     }
 
     function update(Request $request, $id){
@@ -49,32 +37,18 @@ class RoleController extends Controller
             'description' => 'required'
         ]);
 
-        $update = DB::table('roles')
-        ->where('id', $id)
-        ->update([
-            'role_name' => $request->role_name,
-            'description' => $request->description,
-            'updated_at' => date('Y-m-d H:i:s')
-        ]);
+        $role = Role::find($id);
+        $role->role_name = $request->role_name;
+        $role->description = $request->description;
+        $role->save();
 
-        if ($update) {
-            return response()->json(["success" => true, "roles" => $this->index()], 200);
-        }
-        else{
-            return response()->json(["success" => false, "roles" => $this->index()], 500);
-        }
+        return response()->json(["success" => true, "roles" => $this->index()], 200);
     }
 
     function delete($id){
-        $delete = DB::table('roles')
-        ->where('id', $id)
-        ->delete();
+        $role = Role::find($id);
+        $role->delete();
 
-        if ($delete) {
-            return response()->json(["success" => true, "roles" => $this->index()], 200);
-        }
-        else{
-            return response()->json(["success" => false, "roles" => $this->index()], 500);
-        }
+        return response()->json(["success" => true, "roles" => $this->index()], 200);
     }
 }
